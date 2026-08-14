@@ -11,6 +11,35 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 - Przycisk w prawym dolnym rogu siatki („Pomiń" / „Dalej") przechodzi do następnej daty.
 - Zero podpowiedzi. Kolejne daty są przygotowane z wyprzedzeniem (bufor 8 pytań), więc przejście jest natychmiastowe.
 
+## Ściągi (ikony **D** i **C** w nagłówku)
+
+**D — dni doomsday.** Wszystkie 12 dat, które w obrębie jednego roku wypadają w tym samym
+dniu tygodnia, pogrupowane według reguły:
+
+| Grupa | Daty |
+|---|---|
+| Miesiące parzyste (dzień = numer miesiąca) | 04.04, 06.06, 08.08, 10.10, 12.12 |
+| Miesiące nieparzyste („9–5, 7–11") | 09.05, 05.09, 11.07, 07.11 |
+| Początek roku | 03.01, 28.02, 14.03 |
+
+Przełącznik *rok zwykły / rok przestępny* podmienia styczeń na 04.01 i luty na 29.02
+(pozostałe dziesięć dat nie zmienia się nigdy). Żaden konkretny rok nie jest pokazywany.
+
+**C — kotwice stuleci.** Dzień tygodnia doomsday dla roku „00" danego stulecia:
+
+| Stulecie | Numer | Dzień |
+|---|---|---|
+| 1700–1799 | 0 | niedziela |
+| 1800–1899 | 5 | piątek |
+| 1900–1999 | 3 | środa |
+| 2000–2099 | 2 | wtorek |
+
+Cykl powtarza się co 400 lat (2100 jak 1700 itd.).
+
+Obie tabele zweryfikowane rachunkiem dla lat 1–2400: dla każdego roku, zwykłego
+i przestępnego, wszystkie 12 dat doomsday wypada w tym samym dniu tygodnia
+(zero niezgodności), a kotwice stuleci zgadzają się z obliczonym 4.04 danego roku setnego.
+
 ## Udostępnianie
 
 Ikona kodu QR w nagłówku otwiera arkusz z kodem prowadzącym pod adres aplikacji —

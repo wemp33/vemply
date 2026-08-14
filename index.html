@@ -66,12 +66,14 @@
   .logo{width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:block}
   .brand{font-size:19px;font-weight:650;letter-spacing:-.015em}
   .spacer{flex:1}
-  .actions{display:flex;gap:8px;flex:0 0 auto}
+  .actions{display:flex;gap:clamp(5px,1.9vw,8px);flex:0 0 auto}
   .icon-btn{
-    width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+    width:clamp(34px,10vw,38px);height:clamp(34px,10vw,38px);
+    border-radius:11px;display:grid;place-items:center;
     background:var(--surface);border:1px solid var(--line);color:var(--muted);
     transition:background var(--tap) ease,color var(--tap) ease,transform var(--tap) ease;
   }
+  .glyph{font-size:15.5px;font-weight:700;letter-spacing:.01em;line-height:1}
   .icon-btn:active{background:var(--surface-2);color:var(--text);transform:scale(.94)}
 
   /* ---------- statystyki ---------- */
@@ -204,6 +206,53 @@
   }
   .share:active{transform:scale(.985);filter:brightness(1.1)}
 
+  /* ---------- arkusz „dni doomsday” ---------- */
+  .note{font-size:12.5px;line-height:1.45;color:var(--muted);margin:0 0 14px}
+  .seg{
+    position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
+    padding:4px;margin-bottom:12px;
+  }
+  .seg-ind{
+    position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 6px);border-radius:10px;
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
+    transition:transform .3s cubic-bezier(.32,.72,0,1);
+  }
+  .seg-btn{
+    position:relative;z-index:1;padding:9px 4px;border-radius:10px;
+    font-size:14px;font-weight:560;color:var(--muted);transition:color .2s ease;
+  }
+  .seg-btn[aria-selected="true"]{color:#fff}
+  .dd-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:4px}
+  .dd{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
+    padding:9px 4px;text-align:center;
+    transition:border-color .22s ease,background .22s ease;
+  }
+  .dd b{
+    display:block;font-size:17px;font-weight:650;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;
+  }
+  .dd span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .dd.changed{border-color:var(--accent);background:rgba(76,111,255,.12)}
+  .dd.changed b{color:#B9C6FF}
+  @keyframes ddSwap{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  .dd.swapping b{animation:ddSwap .24s cubic-bezier(.32,.72,0,1)}
+
+  /* ---------- arkusz „kotwice stuleci” ---------- */
+  .cent-row{
+    display:flex;align-items:center;gap:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
+    padding:11px 13px;margin-bottom:8px;
+  }
+  .cent-num{
+    width:32px;height:32px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+    font-size:15px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
+  }
+  .cent-yrs{flex:1;font-size:15px;font-weight:560;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .cent-day{font-size:13.5px;color:var(--muted)}
+
   @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
   /* bardzo niskie ekrany: chowamy statystyki, by nic nie uciekło poza ekran */
   @media (max-height:560px){.stats{display:none}}
@@ -224,6 +273,8 @@
     <div class="brand">Vemply</div>
     <div class="spacer"></div>
     <div class="actions">
+    <button class="icon-btn" id="openDoom" aria-label="Dni doomsday"><span class="glyph">D</span></button>
+    <button class="icon-btn" id="openCentury" aria-label="Kotwice stuleci"><span class="glyph">C</span></button>
     <button class="icon-btn" id="openQr" aria-label="Kod QR — udostępnij aplikację">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
         <rect x="3" y="3" width="7" height="7" rx="1"/>
@@ -262,6 +313,59 @@
 </div>
 
 <div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="sheetDoom" role="dialog" aria-modal="true" aria-label="Dni doomsday" aria-hidden="true">
+  <div class="grab"><div class="handle"></div><h2>Dni doomsday</h2></div>
+
+  <div class="seg" role="tablist" aria-label="Rodzaj roku">
+    <div class="seg-ind" id="segInd" aria-hidden="true"></div>
+    <button class="seg-btn" role="tab" data-leap="0" aria-selected="true">Rok zwykły</button>
+    <button class="seg-btn" role="tab" data-leap="1" aria-selected="false">Rok przestępny</button>
+  </div>
+  <p class="note">Wszystkie poniższe daty wypadają w tym samym roku w <b>tym samym dniu tygodnia</b>.</p>
+
+  <h3>Miesiące parzyste — dzień = numer miesiąca</h3>
+  <div class="dd-row">
+    <div class="dd"><b>04.04</b><span>kwiecień</span></div>
+    <div class="dd"><b>06.06</b><span>czerwiec</span></div>
+    <div class="dd"><b>08.08</b><span>sierpień</span></div>
+    <div class="dd"><b>10.10</b><span>październik</span></div>
+    <div class="dd"><b>12.12</b><span>grudzień</span></div>
+  </div>
+
+  <h3>Miesiące nieparzyste — 9–5, 7–11</h3>
+  <div class="dd-row">
+    <div class="dd"><b>09.05</b><span>maj</span></div>
+    <div class="dd"><b>05.09</b><span>wrzesień</span></div>
+    <div class="dd"><b>11.07</b><span>lipiec</span></div>
+    <div class="dd"><b>07.11</b><span>listopad</span></div>
+  </div>
+
+  <h3>Początek roku</h3>
+  <div class="dd-row">
+    <div class="dd" id="ddJan"><b>03.01</b><span>styczeń</span></div>
+    <div class="dd" id="ddFeb"><b>28.02</b><span>luty</span></div>
+    <div class="dd"><b>14.03</b><span>marzec</span></div>
+  </div>
+  <p class="note" style="margin-top:10px">
+    Styczeń i luty przesuwają się o dzień w roku przestępnym — reszta nigdy.
+    14.03 to zawsze ten sam dzień tygodnia co ostatni dzień lutego.
+  </p>
+</div>
+
+<div class="sheet" id="sheetCentury" role="dialog" aria-modal="true" aria-label="Kotwice stuleci" aria-hidden="true">
+  <div class="grab"><div class="handle"></div><h2>Kotwice stuleci</h2></div>
+  <p class="note">Dzień tygodnia dla doomsday roku „00" danego stulecia.</p>
+
+  <div class="cent-row"><span class="cent-num">0</span><span class="cent-yrs">1700–1799</span><span class="cent-day">niedziela</span></div>
+  <div class="cent-row"><span class="cent-num">5</span><span class="cent-yrs">1800–1899</span><span class="cent-day">piątek</span></div>
+  <div class="cent-row"><span class="cent-num">3</span><span class="cent-yrs">1900–1999</span><span class="cent-day">środa</span></div>
+  <div class="cent-row"><span class="cent-num">2</span><span class="cent-yrs">2000–2099</span><span class="cent-day">wtorek</span></div>
+
+  <p class="note" style="margin-top:14px">
+    Cykl powtarza się co 400 lat: 2100 jak 1700, 2200 jak 1800, 2300 jak 1900, 2400 jak 2000.
+  </p>
+</div>
 
 <div class="sheet" id="sheetQr" role="dialog" aria-modal="true" aria-label="Udostępnij Vemply" aria-hidden="true">
   <div class="grab"><div class="handle"></div><h2>Udostępnij Vemply</h2></div>
@@ -510,10 +614,10 @@
     scrim.style.opacity = '';
     scrim.classList.add('open');
     el.scrollTop = 0;
-    // treść dłuższa niż ekran → arkusz musi dać się przewijać, więc gest
-    // przeciągania zostaje wtedy tylko na uchwycie
-    requestAnimationFrame(() =>
-      el.classList.toggle('scrollable', el.scrollHeight > el.clientHeight + 1));
+    // Treść dłuższa niż ekran → arkusz musi dać się przewijać, więc gest
+    // przeciągania zostaje wtedy tylko na uchwycie. Mierzymy od razu: przesunięcie
+    // arkusza to transform, więc jego wymiary są już policzone.
+    el.classList.toggle('scrollable', el.scrollHeight > el.clientHeight + 1);
   }
 
   function hideSheet(el, { velocity = 0, from = 0, instant = false } = {}){
@@ -647,6 +751,42 @@
     S.correct = 0; S.total = 0; S.streak = 0; S.best = 0; S.times = [];
     save(); renderStats(); hideSheet(shSettings);
   });
+
+  /* ---- ściągi: dni doomsday i kotwice stuleci ---- */
+
+  const shDoom = $('sheetDoom'), shCent = $('sheetCentury');
+  const segBtns = [...shDoom.querySelectorAll('.seg-btn')];
+  const segInd = $('segInd'), ddJan = $('ddJan'), ddFeb = $('ddFeb');
+  let leapView = false;
+
+  function renderDoom(animate){
+    for (const b of segBtns) b.setAttribute('aria-selected', String((b.dataset.leap === '1') === leapView));
+    segInd.style.transform = leapView ? 'translateX(calc(100% + 4px))' : 'translateX(0)';
+    ddJan.querySelector('b').textContent = leapView ? '04.01' : '03.01';
+    ddFeb.querySelector('b').textContent = leapView ? '29.02' : '28.02';
+    ddJan.classList.toggle('changed', leapView);
+    ddFeb.classList.toggle('changed', leapView);
+    if (animate){
+      for (const el of [ddJan, ddFeb]){
+        el.classList.remove('swapping');
+        void el.offsetWidth;                     // restart animacji
+        el.classList.add('swapping');
+      }
+    }
+  }
+
+  for (const b of segBtns){
+    b.addEventListener('click', () => {
+      const v = b.dataset.leap === '1';
+      if (v === leapView) return;
+      leapView = v;
+      renderDoom(true);
+    });
+  }
+  renderDoom(false);
+
+  $('openDoom').addEventListener('click', () => showSheet(shDoom));
+  $('openCentury').addEventListener('click', () => showSheet(shCent));
 
   /* ---- udostępnianie ---- */
 

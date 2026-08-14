@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Vemply</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Vemply — trening zgadywania dnia tygodnia z daty.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A0A0F">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./icons/favicon-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vemply">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0A0A0F;
+    --surface:#15151E;
+    --surface-2:#1D1D29;
+    --line:#2C2C3B;
+    --text:#F4F4F7;
+    --muted:#8B8B9E;
+    --accent:#8B5CFF;
+    --accent-2:#4C37E0;
+    --ok:#22C55E;
+    --ok-fill:#15773C;
+    --bad:#F05252;
+    --bad-fill:#8E1D22;
+    --r:16px;
+    --tap:.08s;
+  }
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font:400 16px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+    overflow:hidden;
+    touch-action:manipulation;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-touch-callout:none;
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+
+  /* ---------- układ ---------- */
+  #app{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;
+    padding:
+      max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    gap:clamp(8px,1.6vh,16px);
+  }
+
+  /* ---------- nagłówek ---------- */
+  header{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:2px 2px 0}
+  .logo{width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:block}
+  .brand{font-size:19px;font-weight:650;letter-spacing:-.015em}
+  .spacer{flex:1}
+  .icon-btn{
+    width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+    background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    transition:background var(--tap) ease,color var(--tap) ease;
+  }
+  .icon-btn:active{background:var(--surface-2);color:var(--text)}
+
+  /* ---------- statystyki ---------- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:0 0 auto}
+  .stats[hidden]{display:none}
+  .stat{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:7px 8px;text-align:center;overflow:hidden;
+  }
+  .stat b{display:block;font-size:clamp(15px,4.4vw,19px);font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat span{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+
+  /* ---------- karta z datą ---------- */
+  .card{
+    flex:1 1 auto;min-height:0;
+    background:linear-gradient(168deg,#181824 0%,#12121B 100%);
+    border:1px solid var(--line);border-radius:20px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;padding:14px 16px;text-align:center;position:relative;overflow:hidden;
+  }
+  .card::after{
+    content:"";position:absolute;inset:-40% 30% 70% 30%;
+    background:radial-gradient(closest-side,rgba(139,92,255,.20),transparent);
+    pointer-events:none;
+  }
+  #date{
+    font-size:clamp(26px,7.6vw,42px);font-weight:680;letter-spacing:-.025em;line-height:1.12;
+    text-wrap:balance;position:relative;
+  }
+  #era{
+    font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:#C9B8FF;background:rgba(139,92,255,.14);border:1px solid rgba(139,92,255,.35);
+    padding:4px 11px;border-radius:999px;position:relative;
+  }
+  #era[hidden]{display:none}
+
+  /* ---------- odpowiedzi ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:0 0 auto}
+  .ans{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:0 4px;height:clamp(46px,7.2vh,58px);
+    font-size:clamp(13px,4.1vw,17px);font-weight:560;letter-spacing:-.01em;
+    display:flex;align-items:center;justify-content:center;
+    transition:background var(--tap) ease,border-color var(--tap) ease,color var(--tap) ease,transform var(--tap) ease;
+  }
+  .ans:nth-child(7){grid-column:1 / -1}
+  .ans:active{transform:scale(.975)}
+  .ans.correct{background:var(--ok-fill);border-color:var(--ok);color:#F0FFF5}
+  .ans.wrong{background:var(--bad-fill);border-color:var(--bad);color:#FFF0F0}
+  .locked .ans:active{transform:none}
+
+  /* ---------- dolny przycisk ---------- */
+  .next{
+    flex:0 0 auto;width:100%;height:clamp(48px,7.4vh,58px);border-radius:var(--r);
+    background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    font-size:16px;font-weight:600;letter-spacing:-.01em;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:background var(--tap) ease,color var(--tap) ease,border-color var(--tap) ease,transform var(--tap) ease;
+  }
+  .next:active{transform:scale(.985)}
+  .next.armed{
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
+    border-color:transparent;color:#fff;
+  }
+
+  /* ---------- ustawienia ---------- */
+  .scrim{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);
+    opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:10;
+  }
+  .scrim.open{opacity:1;pointer-events:auto}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:11;
+    background:var(--surface);border-top:1px solid var(--line);
+    border-radius:22px 22px 0 0;
+    padding:8px 18px calc(18px + env(safe-area-inset-bottom));
+    transform:translateY(102%);transition:transform .24s cubic-bezier(.32,.72,0,1);
+    max-height:88dvh;overflow-y:auto;
+  }
+  .sheet.open{transform:translateY(0)}
+  .handle{width:38px;height:4px;border-radius:999px;background:var(--line);margin:0 auto 14px}
+  .sheet h2{font-size:17px;font-weight:650;margin-bottom:12px;letter-spacing:-.015em}
+  .sheet h3{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 8px}
+  .opt{
+    display:flex;align-items:center;gap:12px;width:100%;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
+    padding:13px 14px;margin-bottom:8px;text-align:left;font-size:15.5px;font-weight:500;
+    transition:border-color var(--tap) ease,background var(--tap) ease;
+  }
+  .opt .dot{
+    width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;
+    display:grid;place-items:center;transition:border-color var(--tap) ease;
+  }
+  .opt .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);transform:scale(0);transition:transform .14s cubic-bezier(.32,1.4,.6,1)}
+  .opt[aria-checked="true"]{border-color:var(--accent);background:rgba(139,92,255,.10)}
+  .opt[aria-checked="true"] .dot{border-color:var(--accent)}
+  .opt[aria-checked="true"] .dot::after{transform:scale(1)}
+  .opt .sub{display:block;font-size:12.5px;color:var(--muted);font-weight:400;margin-top:2px}
+  .switch{justify-content:space-between}
+  .track{width:48px;height:29px;border-radius:999px;background:var(--surface);border:1px solid var(--line);flex:0 0 auto;padding:2px;transition:background var(--tap) ease,border-color var(--tap) ease}
+  .track i{display:block;width:23px;height:23px;border-radius:50%;background:var(--muted);transition:transform .18s cubic-bezier(.32,.72,0,1),background var(--tap) ease}
+  .switch[aria-checked="true"] .track{background:var(--accent);border-color:var(--accent)}
+  .switch[aria-checked="true"] .track i{transform:translateX(19px);background:#fff}
+  .danger{width:100%;padding:13px;border-radius:13px;border:1px solid rgba(240,82,82,.35);color:var(--bad);background:rgba(240,82,82,.07);font-size:15px;font-weight:560;margin-top:6px}
+  .foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:16px;letter-spacing:.02em}
+
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+  /* bardzo niskie ekrany: chowamy statystyki, by nic nie uciekło poza ekran */
+  @media (max-height:560px){.stats{display:none}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#8B5CFF"/><stop offset="1" stop-color="#4C37E0"/>
+      </linearGradient></defs>
+      <rect width="100" height="100" rx="22" fill="url(#lg)"/>
+      <path d="M28.5 27.5 L50 71 L71.5 27.5" fill="none" stroke="#fff" stroke-width="13.3"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand">Vemply</div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="openSettings" aria-label="Ustawienia">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="stats" id="stats">
+    <div class="stat"><b id="sStreak">0</b><span>seria</span></div>
+    <div class="stat"><b id="sAcc">—</b><span>trafność</span></div>
+    <div class="stat"><b id="sTime">—</b><span>śr. czas</span></div>
+  </div>
+
+  <div class="card">
+    <div id="date">&nbsp;</div>
+    <div id="era" hidden>n.e.</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <button class="next" id="next">Pomiń</button>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Ustawienia">
+  <div class="handle"></div>
+  <h2>Ustawienia</h2>
+
+  <h3>Zakres dat</h3>
+  <button class="opt" role="radio" data-era="ce"><span class="dot"></span><span>Tylko naszej ery<span class="sub">1 – 2400 n.e.</span></span></button>
+  <button class="opt" role="radio" data-era="both"><span class="dot"></span><span>Naszej ery i p.n.e.<span class="sub">3000 p.n.e. – 2400 n.e.</span></span></button>
+  <button class="opt" role="radio" data-era="bce"><span class="dot"></span><span>Tylko przed naszą erą<span class="sub">3000 – 1 p.n.e.</span></span></button>
+
+  <h3>Widok</h3>
+  <button class="opt switch" role="switch" id="toggleStats"><span>Pokaż statystyki</span><span class="track"><i></i></span></button>
+
+  <h3>Dane</h3>
+  <button class="danger" id="resetStats">Wyzeruj statystyki</button>
+
+  <div class="foot">Vemply · kalendarz gregoriański (proleptyczny)</div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ============ kalendarz gregoriański (proleptyczny) ============
+     Numeracja astronomiczna: rok 0 = 1 p.n.e., rok -1 = 2 p.n.e. itd.
+     Zweryfikowane dzień po dniu dla 4001 p.n.e. – 2600 n.e.                */
+
+  const isLeap = y => (y % 4 === 0) && (y % 100 !== 0 || y % 400 === 0);
+  const MDAYS  = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const dim    = (y,m) => (m === 2 && isLeap(y)) ? 29 : MDAYS[m-1];
+
+  function jdn(y,m,d){
+    const a  = Math.floor((14 - m) / 12);
+    const y2 = y + 4800 - a;
+    const m2 = m + 12 * a - 3;
+    return d + Math.floor((153 * m2 + 2) / 5) + 365 * y2
+             + Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
+  }
+  // 0 = niedziela … 6 = sobota
+  const dayOfWeek = (y,m,d) => (((jdn(y,m,d) + 1) % 7) + 7) % 7;
+
+  const DAYS = ['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'];
+  const MONTHS = ['stycznia','lutego','marca','kwietnia','maja','czerwca',
+                  'lipca','sierpnia','września','października','listopada','grudnia'];
+
+  /* ============ losowanie dat ============
+     Rozkład mieszany: mocno faworyzuje daty bliskie nam,
+     ale każdy rok z pełnego zakresu ma niezerowe prawdopodobieństwo.       */
+
+  // [waga, odMin, doMax] – lata kalendarzowe n.e.
+  const AD_BUCKETS = [[45,1975,2049],[25,1900,2099],[20,1600,2199],[10,1,2400]];
+  // [waga, odMin, doMax] – lata p.n.e. (liczone „ile lat p.n.e.”)
+  const BC_BUCKETS = [[45,1,100],[25,1,400],[20,1,1200],[10,1,3000]];
+  const BC_SHARE = 0.30; // udział p.n.e. w trybie mieszanym
+
+  const randInt = (a,b) => a + Math.floor(Math.random() * (b - a + 1));
+
+  function pickBucket(buckets){
+    let total = 0;
+    for (const b of buckets) total += b[0];
+    let r = Math.random() * total;
+    for (const b of buckets){ r -= b[0]; if (r < 0) return b; }
+    return buckets[buckets.length - 1];
+  }
+
+  function randomYear(mode){
+    let bce;
+    if (mode === 'ce') bce = false;
+    else if (mode === 'bce') bce = true;
+    else bce = Math.random() < BC_SHARE;
+
+    if (bce){
+      const b = pickBucket(BC_BUCKETS);
+      return 1 - randInt(b[1], b[2]);       // rok astronomiczny ≤ 0
+    }
+    const b = pickBucket(AD_BUCKETS);
+    return randInt(b[1], b[2]);
+  }
+
+  function randomDate(mode){
+    const y = randomYear(mode);
+    // równomiernie w obrębie roku (bez przeważania krótkich miesięcy)
+    let n = randInt(1, isLeap(y) ? 366 : 365);
+    let m = 1;
+    for (;;){
+      const len = dim(y,m);
+      if (n <= len) break;
+      n -= len; m++;
+    }
+    return { y, m, d: n, dow: dayOfWeek(y, m, n) };
+  }
+
+  /* ============ stan ============ */
+
+  const KEY = 'vemply.v1';
+  const defaults = { era:'ce', showStats:true, correct:0, total:0, streak:0, best:0, times:[] };
+  let S = Object.assign({}, defaults);
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) S = Object.assign(S, JSON.parse(raw) || {});
+  } catch (e) {}
+  if (!['ce','both','bce'].includes(S.era)) S.era = 'ce';
+  if (!Array.isArray(S.times)) S.times = [];
+
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  /* ============ kolejka pytań (zawsze gotowa z wyprzedzeniem) ============ */
+
+  let queue = [];
+  function fill(){
+    while (queue.length < 8){
+      const q = randomDate(S.era);
+      const last = queue.length ? queue[queue.length - 1] : current;
+      if (last && last.y === q.y && last.m === q.m && last.d === q.d) continue; // bez powtórki
+      queue.push(q);
+    }
+  }
+  let current = null;
+
+  /* ============ DOM ============ */
+
+  const $ = id => document.getElementById(id);
+  const elDate = $('date'), elEra = $('era'), elGrid = $('grid'), elNext = $('next'),
+        elApp = $('app'), elStats = $('stats'),
+        elStreak = $('sStreak'), elAcc = $('sAcc'), elTime = $('sTime');
+
+  const buttons = DAYS.map((name, i) => {
+    const b = document.createElement('button');
+    b.className = 'ans';
+    b.type = 'button';
+    b.textContent = name;
+    b.dataset.i = i;
+    elGrid.appendChild(b);
+    return b;
+  });
+
+  let locked = false, answeredAt = 0, timer = 0, shownAt = 0;
+
+  function renderStats(){
+    elStats.hidden = !S.showStats;
+    elStreak.textContent = S.streak;
+    elAcc.textContent = S.total ? Math.round(S.correct / S.total * 100) + '%' : '—';
+    if (S.times.length){
+      const avg = S.times.reduce((a,b) => a + b, 0) / S.times.length / 1000;
+      elTime.textContent = (avg < 10 ? avg.toFixed(1) : Math.round(avg)) + ' s';
+    } else elTime.textContent = '—';
+  }
+
+  function nextQuestion(){
+    clearTimeout(timer);
+    fill();
+    current = queue.shift();
+    fill();
+
+    for (const b of buttons) b.classList.remove('correct','wrong');
+    elApp.classList.remove('locked');
+    locked = false;
+
+    const bce = current.y <= 0;
+    elDate.textContent = current.d + ' ' + MONTHS[current.m - 1] + ' ' + (bce ? (1 - current.y) : current.y);
+    if (S.era === 'ce'){
+      elEra.hidden = true;
+    } else {
+      elEra.hidden = false;
+      elEra.textContent = bce ? 'p.n.e.' : 'n.e.';
+    }
+
+    elNext.textContent = 'Pomiń';
+    elNext.classList.remove('armed');
+    shownAt = performance.now();
+  }
+
+  function answer(i){
+    if (locked || !current) return;
+    locked = true;
+    elApp.classList.add('locked');
+
+    const dt = performance.now() - shownAt;
+    const ok = (i === current.dow);
+
+    buttons[current.dow].classList.add('correct');
+    if (!ok) buttons[i].classList.add('wrong');
+
+    S.total++;
+    if (ok){ S.correct++; S.streak++; if (S.streak > S.best) S.best = S.streak; }
+    else S.streak = 0;
+    S.times.push(dt);
+    if (S.times.length > 20) S.times.shift();
+    save();
+    renderStats();
+
+    if (ok){
+      timer = setTimeout(nextQuestion, 500);   // poprawnie → automatycznie dalej
+    } else {
+      elNext.textContent = 'Dalej';            // błędnie → czekamy na użytkownika
+      elNext.classList.add('armed');
+    }
+  }
+
+  /* ============ zdarzenia (pointerdown = brak opóźnienia na iOS) ============ */
+
+  elGrid.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.ans');
+    if (b) answer(+b.dataset.i);
+  });
+  elNext.addEventListener('pointerdown', () => nextQuestion());
+
+  document.addEventListener('keydown', e => {
+    if (sheetOpen){ if (e.key === 'Escape') closeSheet(); return; }
+    if (e.key >= '1' && e.key <= '7'){ answer(+e.key - 1); e.preventDefault(); }
+    else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight'){ nextQuestion(); e.preventDefault(); }
+  });
+
+  // zapobiega przypadkowemu zaznaczaniu / menu kontekstowemu przy szybkim stukaniu
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('gesturestart', e => e.preventDefault());
+
+  /* ============ ustawienia ============ */
+
+  const scrim = $('scrim'), sheet = $('sheet');
+  let sheetOpen = false;
+  const eraOpts = [...sheet.querySelectorAll('[data-era]')];
+  const toggleStats = $('toggleStats');
+
+  function renderSettings(){
+    for (const o of eraOpts) o.setAttribute('aria-checked', String(o.dataset.era === S.era));
+    toggleStats.setAttribute('aria-checked', String(!!S.showStats));
+  }
+  function openSheet(){ sheetOpen = true; scrim.classList.add('open'); sheet.classList.add('open'); }
+  function closeSheet(){ sheetOpen = false; scrim.classList.remove('open'); sheet.classList.remove('open'); }
+
+  $('openSettings').addEventListener('click', () => { renderSettings(); openSheet(); });
+  scrim.addEventListener('click', closeSheet);
+
+  for (const o of eraOpts){
+    o.addEventListener('click', () => {
+      if (S.era === o.dataset.era) return closeSheet();
+      S.era = o.dataset.era;
+      save();
+      renderSettings();
+      queue = [];                 // nowy zakres → świeża kolejka
+      closeSheet();
+      nextQuestion();
+    });
+  }
+
+  toggleStats.addEventListener('click', () => {
+    S.showStats = !S.showStats;
+    save(); renderSettings(); renderStats();
+  });
+
+  $('resetStats').addEventListener('click', () => {
+    S.correct = 0; S.total = 0; S.streak = 0; S.best = 0; S.times = [];
+    save(); renderStats(); closeSheet();
+  });
+
+  /* ============ start ============ */
+
+  renderStats();
+  renderSettings();
+  nextQuestion();
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')){
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+})();
+</script>
+</body>
+</html>

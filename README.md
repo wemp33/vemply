@@ -11,6 +11,28 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 - Przycisk w prawym dolnym rogu siatki („Pomiń" / „Dalej") przechodzi do następnej daty.
 - Zero podpowiedzi. Kolejne daty są przygotowane z wyprzedzeniem (bufor 8 pytań), więc przejście jest natychmiastowe.
 
+## Udostępnianie
+
+Ikona kodu QR w nagłówku otwiera arkusz z kodem prowadzącym pod adres aplikacji —
+wystarczy, że ktoś zeskanuje go aparatem telefonu. Pod spodem przycisk *Udostępnij link*
+(systemowe okno udostępniania, a bez jego wsparcia — kopiowanie do schowka).
+
+Kod QR jest wklejony do `index.html` jako SVG, więc działa też offline. Po zmianie adresu
+aplikacji trzeba go wygenerować od nowa i podmienić zawartość `.qr-card`:
+
+```bash
+npx qrcode -t svg -e M -o qr.svg "https://wemp33.github.io/vemply/"
+```
+
+## Arkusze (ustawienia, QR)
+
+Oba arkusze zamyka się gestem — w trakcie przeciągania podążają za palcem 1:1
+(w górę z oporem), a przyciemnienie tła gaśnie proporcjonalnie do przesunięcia.
+Po puszczeniu decyduje dystans (28 % wysokości) **albo** prędkość (0,5 px/ms),
+więc krótkie strzepnięcie też zamyka; czas animacji dobiera się do prędkości gestu.
+Gdy treść nie mieści się na ekranie, arkusz przewija się normalnie, a przeciąganie
+zostaje na uchwycie.
+
 ## Zakres dat (Ustawienia)
 
 | Tryb | Zakres |

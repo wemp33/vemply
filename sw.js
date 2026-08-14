@@ -1,5 +1,5 @@
 /* Vemply – service worker: aplikacja działa w 100% offline. */
-const CACHE = 'vemply-v3';
+const CACHE = 'vemply-v4';
 const ASSETS = [
   './',
   './index.html',

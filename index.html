@@ -167,7 +167,7 @@
   }
   .sheet.dragging .handle{background:#46465C;width:44px}
   .sheet h2{font-size:17px;font-weight:650;margin-bottom:12px;letter-spacing:-.015em}
-  .sheet h3{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 8px}
+  .sheet h3{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
   .opt{
     display:flex;align-items:center;gap:12px;width:100%;
     background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
@@ -207,11 +207,11 @@
   .share:active{transform:scale(.985);filter:brightness(1.1)}
 
   /* ---------- arkusz „dni doomsday” ---------- */
-  .note{font-size:12.5px;line-height:1.45;color:var(--muted);margin:0 0 14px}
+  .note{font-size:12.5px;line-height:1.42;color:var(--muted);margin:0 0 11px}
   .seg{
     position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;
     background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
-    padding:4px;margin-bottom:12px;
+    padding:4px;margin-bottom:10px;
   }
   .seg-ind{
     position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 6px);border-radius:10px;
@@ -223,19 +223,24 @@
     font-size:14px;font-weight:560;color:var(--muted);transition:color .2s ease;
   }
   .seg-btn[aria-selected="true"]{color:#fff}
-  .dd-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:4px}
+  .dd-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:4px}
   .dd{
     background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
-    padding:9px 4px;text-align:center;
+    padding:7px 6px 8px;text-align:center;
     transition:border-color .22s ease,background .22s ease;
   }
-  .dd b{
-    display:block;font-size:17px;font-weight:650;letter-spacing:-.02em;
-    font-variant-numeric:tabular-nums;
+  .dd span{
+    display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#7A7A8C;
   }
-  .dd span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .dd b{
+    display:block;margin-top:4px;font-size:14.5px;font-weight:500;color:var(--muted);
+    font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+  }
+  .dd b i{font-style:normal}
+  .dd b i.a{color:var(--text);font-weight:700}       /* kotwica miesiąca */
+  .dd b i + i::before{content:"·";margin:0 4.5px;color:#3E3E52;font-weight:400}
   .dd.changed{border-color:var(--accent);background:rgba(76,111,255,.12)}
-  .dd.changed b{color:#B9C6FF}
+  .dd.changed b i.a{color:#B9C6FF}
   @keyframes ddSwap{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   .dd.swapping b{animation:ddSwap .24s cubic-bezier(.32,.72,0,1)}
 
@@ -322,33 +327,21 @@
     <button class="seg-btn" role="tab" data-leap="0" aria-selected="true">Rok zwykły</button>
     <button class="seg-btn" role="tab" data-leap="1" aria-selected="false">Rok przestępny</button>
   </div>
-  <p class="note">Wszystkie poniższe daty wypadają w tym samym roku w <b>tym samym dniu tygodnia</b>.</p>
+  <p class="note">
+    W danym roku wszystkie wypadają w <b>tym samym dniu tygodnia</b>.
+    Wyróżniona jest kotwica miesiąca, reszta to ona co 7 dni.
+  </p>
 
-  <h3>Miesiące parzyste — dzień = numer miesiąca</h3>
-  <div class="dd-row">
-    <div class="dd"><b>04.04</b><span>kwiecień</span></div>
-    <div class="dd"><b>06.06</b><span>czerwiec</span></div>
-    <div class="dd"><b>08.08</b><span>sierpień</span></div>
-    <div class="dd"><b>10.10</b><span>październik</span></div>
-    <div class="dd"><b>12.12</b><span>grudzień</span></div>
-  </div>
+  <h3>Miesiące parzyste — kotwica = numer miesiąca</h3>
+  <div class="dd-row" id="ddEven"></div>
 
   <h3>Miesiące nieparzyste — 9–5, 7–11</h3>
-  <div class="dd-row">
-    <div class="dd"><b>09.05</b><span>maj</span></div>
-    <div class="dd"><b>05.09</b><span>wrzesień</span></div>
-    <div class="dd"><b>11.07</b><span>lipiec</span></div>
-    <div class="dd"><b>07.11</b><span>listopad</span></div>
-  </div>
+  <div class="dd-row" id="ddOdd"></div>
 
   <h3>Początek roku</h3>
-  <div class="dd-row">
-    <div class="dd" id="ddJan"><b>03.01</b><span>styczeń</span></div>
-    <div class="dd" id="ddFeb"><b>28.02</b><span>luty</span></div>
-    <div class="dd"><b>14.03</b><span>marzec</span></div>
-  </div>
+  <div class="dd-row" id="ddStart"></div>
   <p class="note" style="margin-top:10px">
-    Styczeń i luty przesuwają się o dzień w roku przestępnym — reszta nigdy.
+    Styczeń i luty przesuwają się w roku przestępnym — pozostałe dziesięć miesięcy nigdy.
     14.03 to zawsze ten sam dzień tygodnia co ostatni dzień lutego.
   </p>
 </div>
@@ -756,21 +749,49 @@
 
   const shDoom = $('sheetDoom'), shCent = $('sheetCentury');
   const segBtns = [...shDoom.querySelectorAll('.seg-btn')];
-  const segInd = $('segInd'), ddJan = $('ddJan'), ddFeb = $('ddFeb');
+  const segInd = $('segInd');
   let leapView = false;
+
+  const MIES = ['styczeń','luty','marzec','kwiecień','maj','czerwiec',
+                'lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+  // kotwice miesięcy w roku zwykłym (styczeń i luty mają w przestępnym o 1 więcej)
+  const KOTWICE = [3, 28, 14, 4, 9, 6, 11, 8, 5, 10, 7, 12];
+  // grupy zachowują podział z ekranu: parzyste / nieparzyste / początek roku
+  const GRUPY = [['ddEven', [4,6,8,10,12]], ['ddOdd', [5,9,7,11]], ['ddStart', [1,2,3]]];
+
+  // wszystkie dni doomsday w miesiącu = kotwica ± wielokrotność 7
+  function doomsdays(m, leap){
+    const len = m === 2 ? (leap ? 29 : 28) : MDAYS[m - 1];
+    const anchor = (leap && m === 1) ? 4 : (leap && m === 2) ? 29 : KOTWICE[m - 1];
+    const days = [];
+    for (let d = anchor % 7 || 7; d <= len; d += 7) days.push(d);
+    return { days, anchor };
+  }
 
   function renderDoom(animate){
     for (const b of segBtns) b.setAttribute('aria-selected', String((b.dataset.leap === '1') === leapView));
     segInd.style.transform = leapView ? 'translateX(calc(100% + 4px))' : 'translateX(0)';
-    ddJan.querySelector('b').textContent = leapView ? '04.01' : '03.01';
-    ddFeb.querySelector('b').textContent = leapView ? '29.02' : '28.02';
-    ddJan.classList.toggle('changed', leapView);
-    ddFeb.classList.toggle('changed', leapView);
-    if (animate){
-      for (const el of [ddJan, ddFeb]){
-        el.classList.remove('swapping');
-        void el.offsetWidth;                     // restart animacji
-        el.classList.add('swapping');
+
+    for (const [id, months] of GRUPY){
+      const box = $(id);
+      box.textContent = '';
+      for (const m of months){
+        const { days, anchor } = doomsdays(m, leapView);
+        const zmienny = (m === 1 || m === 2);          // tylko te dwa zależą od przestępności
+        const tile = document.createElement('div');
+        tile.className = 'dd' + (leapView && zmienny ? ' changed' : '') +
+                         (animate && zmienny ? ' swapping' : '');
+        const name = document.createElement('span');
+        name.textContent = MIES[m - 1];
+        const list = document.createElement('b');
+        for (const d of days){
+          const it = document.createElement('i');
+          if (d === anchor) it.className = 'a';
+          it.textContent = d;
+          list.appendChild(it);
+        }
+        tile.append(name, list);
+        box.appendChild(tile);
       }
     }
   }

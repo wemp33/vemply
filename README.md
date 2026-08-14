@@ -13,17 +13,28 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 
 ## Ściągi (ikony **D** i **C** w nagłówku)
 
-**D — dni doomsday.** Wszystkie 12 dat, które w obrębie jednego roku wypadają w tym samym
-dniu tygodnia, pogrupowane według reguły:
+**D — dni doomsday.** Wszystkie dni, które w obrębie jednego roku wypadają w tym samym
+dniu tygodnia — w każdym miesiącu kotwica i jej powtórzenia co 7 dni (52 dni w roku).
+Ekran zachowuje podział na miesiące, pogrupowane regułą kotwic:
 
-| Grupa | Daty |
-|---|---|
-| Miesiące parzyste (dzień = numer miesiąca) | 04.04, 06.06, 08.08, 10.10, 12.12 |
-| Miesiące nieparzyste („9–5, 7–11") | 09.05, 05.09, 11.07, 07.11 |
-| Początek roku | 03.01, 28.02, 14.03 |
+| Grupa | Miesiąc | Dni (kotwica **pogrubiona**) |
+|---|---|---|
+| Parzyste — kotwica = numer miesiąca | kwiecień | **4** · 11 · 18 · 25 |
+| | czerwiec | **6** · 13 · 20 · 27 |
+| | sierpień | 1 · **8** · 15 · 22 · 29 |
+| | październik | 3 · **10** · 17 · 24 · 31 |
+| | grudzień | 5 · **12** · 19 · 26 |
+| Nieparzyste — „9–5, 7–11" | maj | 2 · **9** · 16 · 23 · 30 |
+| | wrzesień | **5** · 12 · 19 · 26 |
+| | lipiec | 4 · **11** · 18 · 25 |
+| | listopad | **7** · 14 · 21 · 28 |
+| Początek roku | styczeń | **3** · 10 · 17 · 24 · 31 · *(przestępny:* **4** · 11 · 18 · 25*)* |
+| | luty | 7 · 14 · 21 · **28** · *(przestępny:* 1 · 8 · 15 · 22 · **29***)* |
+| | marzec | 7 · **14** · 21 · 28 |
 
-Przełącznik *rok zwykły / rok przestępny* podmienia styczeń na 04.01 i luty na 29.02
-(pozostałe dziesięć dat nie zmienia się nigdy). Żaden konkretny rok nie jest pokazywany.
+Przełącznik *rok zwykły / rok przestępny* podmienia listy stycznia i lutego
+(pozostałe dziesięć miesięcy nie zmienia się nigdy). Żaden konkretny rok nie jest pokazywany.
+Listy nie są wpisane na sztywno — aplikacja liczy je z kotwicy i długości miesiąca.
 
 **C — kotwice stuleci.** Dzień tygodnia doomsday dla roku „00" danego stulecia:
 
@@ -37,8 +48,10 @@ Przełącznik *rok zwykły / rok przestępny* podmienia styczeń na 04.01 i luty
 Cykl powtarza się co 400 lat (2100 jak 1700 itd.).
 
 Obie tabele zweryfikowane rachunkiem dla lat 1–2400: dla każdego roku, zwykłego
-i przestępnego, wszystkie 12 dat doomsday wypada w tym samym dniu tygodnia
-(zero niezgodności), a kotwice stuleci zgadzają się z obliczonym 4.04 danego roku setnego.
+i przestępnego, wyświetlane listy pokrywają się **dokładnie** ze zbiorem dni, które
+w tym roku wypadają w dniu doomsday (zero niezgodności — porównanie z niezależną
+implementacją opartą o numer dnia juliańskiego), a kotwice stuleci zgadzają się
+z obliczonym 4.04 danego roku setnego.
 
 ## Udostępnianie
 

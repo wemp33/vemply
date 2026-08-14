@@ -108,11 +108,12 @@
   #era[hidden]{display:none}
 
   /* ---------- odpowiedzi ---------- */
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:0 0 auto}
+  /* minmax(0,1fr) zamiast 1fr — gwarantuje idealnie równe kolumny przy każdej szerokości */
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:0 0 auto}
   .ans{
     background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
-    padding:0 4px;height:clamp(46px,7.2vh,58px);
-    font-size:clamp(13px,4.1vw,17px);font-weight:560;letter-spacing:-.01em;
+    padding:0 6px;height:clamp(46px,7.2vh,58px);
+    font-size:clamp(14px,4.3vw,17px);font-weight:560;letter-spacing:-.01em;
     display:flex;align-items:center;justify-content:center;
     transition:background var(--tap) ease,border-color var(--tap) ease,color var(--tap) ease,transform var(--tap) ease;
   }
@@ -123,9 +124,9 @@
 
   /* ---------- przycisk „pomiń / dalej" (prawy dolny róg siatki) ---------- */
   .next{
-    grid-column:2;height:clamp(46px,7.2vh,58px);border-radius:var(--r);padding:0 4px;
+    grid-column:2;height:clamp(46px,7.2vh,58px);border-radius:var(--r);padding:0 6px;
     background:transparent;border:1px solid var(--line);color:var(--muted);
-    font-size:clamp(13px,4.1vw,17px);font-weight:560;letter-spacing:-.01em;
+    font-size:clamp(14px,4.3vw,17px);font-weight:560;letter-spacing:-.01em;
     display:flex;align-items:center;justify-content:center;gap:6px;
     transition:background var(--tap) ease,color var(--tap) ease,border-color var(--tap) ease,transform var(--tap) ease;
   }

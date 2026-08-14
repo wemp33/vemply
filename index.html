@@ -25,8 +25,10 @@
     --line:#2C2C3B;
     --text:#F4F4F7;
     --muted:#8B8B9E;
-    --accent:#8B5CFF;
-    --accent-2:#4C37E0;
+    --accent:#4C6FFF;
+    --accent-2:#1E2E8F;
+    --logo-1:#3A57D6;
+    --logo-2:#101C52;
     --ok:#22C55E;
     --ok-fill:#15773C;
     --bad:#F05252;
@@ -91,7 +93,7 @@
   }
   .card::after{
     content:"";position:absolute;inset:-40% 30% 70% 30%;
-    background:radial-gradient(closest-side,rgba(139,92,255,.20),transparent);
+    background:radial-gradient(closest-side,rgba(76,111,255,.20),transparent);
     pointer-events:none;
   }
   #date{
@@ -100,7 +102,7 @@
   }
   #era{
     font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-    color:#C9B8FF;background:rgba(139,92,255,.14);border:1px solid rgba(139,92,255,.35);
+    color:#B9C6FF;background:rgba(76,111,255,.14);border:1px solid rgba(76,111,255,.38);
     padding:4px 11px;border-radius:999px;position:relative;
   }
   #era[hidden]{display:none}
@@ -114,21 +116,20 @@
     display:flex;align-items:center;justify-content:center;
     transition:background var(--tap) ease,border-color var(--tap) ease,color var(--tap) ease,transform var(--tap) ease;
   }
-  .ans:nth-child(7){grid-column:1 / -1}
   .ans:active{transform:scale(.975)}
   .ans.correct{background:var(--ok-fill);border-color:var(--ok);color:#F0FFF5}
   .ans.wrong{background:var(--bad-fill);border-color:var(--bad);color:#FFF0F0}
   .locked .ans:active{transform:none}
 
-  /* ---------- dolny przycisk ---------- */
+  /* ---------- przycisk „pomiń / dalej" (prawy dolny róg siatki) ---------- */
   .next{
-    flex:0 0 auto;width:100%;height:clamp(48px,7.4vh,58px);border-radius:var(--r);
-    background:var(--surface);border:1px solid var(--line);color:var(--muted);
-    font-size:16px;font-weight:600;letter-spacing:-.01em;
-    display:flex;align-items:center;justify-content:center;gap:8px;
+    grid-column:2;height:clamp(46px,7.2vh,58px);border-radius:var(--r);padding:0 4px;
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    font-size:clamp(13px,4.1vw,17px);font-weight:560;letter-spacing:-.01em;
+    display:flex;align-items:center;justify-content:center;gap:6px;
     transition:background var(--tap) ease,color var(--tap) ease,border-color var(--tap) ease,transform var(--tap) ease;
   }
-  .next:active{transform:scale(.985)}
+  .next:active{transform:scale(.975)}
   .next.armed{
     background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
     border-color:transparent;color:#fff;
@@ -163,7 +164,7 @@
     display:grid;place-items:center;transition:border-color var(--tap) ease;
   }
   .opt .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);transform:scale(0);transition:transform .14s cubic-bezier(.32,1.4,.6,1)}
-  .opt[aria-checked="true"]{border-color:var(--accent);background:rgba(139,92,255,.10)}
+  .opt[aria-checked="true"]{border-color:var(--accent);background:rgba(76,111,255,.12)}
   .opt[aria-checked="true"] .dot{border-color:var(--accent)}
   .opt[aria-checked="true"] .dot::after{transform:scale(1)}
   .opt .sub{display:block;font-size:12.5px;color:var(--muted);font-weight:400;margin-top:2px}
@@ -186,7 +187,7 @@
   <header>
     <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
       <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#8B5CFF"/><stop offset="1" stop-color="#4C37E0"/>
+        <stop offset="0" stop-color="var(--logo-1)"/><stop offset="1" stop-color="var(--logo-2)"/>
       </linearGradient></defs>
       <rect width="100" height="100" rx="22" fill="url(#lg)"/>
       <path d="M28.5 27.5 L50 71 L71.5 27.5" fill="none" stroke="#fff" stroke-width="13.3"
@@ -213,9 +214,10 @@
     <div id="era" hidden>n.e.</div>
   </div>
 
-  <div class="grid" id="grid"></div>
-
-  <button class="next" id="next">Pomiń</button>
+  <div class="grid" id="grid">
+    <!-- 7 przycisków z dniami wstawia skrypt przed tym przyciskiem -->
+    <button class="next" id="next">Pomiń</button>
+  </div>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -350,7 +352,7 @@
     b.type = 'button';
     b.textContent = name;
     b.dataset.i = i;
-    elGrid.appendChild(b);
+    elGrid.insertBefore(b, elNext);   // dni trafiają przed przycisk „Pomiń”
     return b;
   });
 

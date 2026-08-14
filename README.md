@@ -8,7 +8,7 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 - System losuje datę i pokazuje 7 przycisków: *niedziela … sobota*.
 - **Dobrze** → przycisk zapala się na zielono, po 0,5 s leci następna data.
 - **Źle** → wybrany przycisk na czerwono, poprawny na zielono, aplikacja **czeka** — sam klikasz „Dalej".
-- Dolny przycisk pomija datę bez odpowiadania.
+- Przycisk w prawym dolnym rogu siatki („Pomiń" / „Dalej") przechodzi do następnej daty.
 - Zero podpowiedzi. Kolejne daty są przygotowane z wyprzedzeniem (bufor 8 pytań), więc przejście jest natychmiastowe.
 
 ## Zakres dat (Ustawienia)

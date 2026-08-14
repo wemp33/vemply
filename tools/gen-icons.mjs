@@ -105,11 +105,11 @@ function renderIcon(size, { padding = 0, radius = null } = {}) {
             bgA = dd <= rr ? 1 : 0;
           }
 
-          // gradient tła: fiolet -> indygo (po przekątnej)
+          // gradient tła: granat rozjaśniony -> głęboki granat (po przekątnej)
           const t = Math.min(1, Math.max(0, (fx + fy) / 2));
-          const bgR = lerp(0x8b, 0x4c, t);
-          const bgG = lerp(0x5c, 0x37, t);
-          const bgB = lerp(0xff, 0xe0, t);
+          const bgR = lerp(0x3a, 0x10, t);
+          const bgG = lerp(0x57, 0x1c, t);
+          const bgB = lerp(0xd6, 0x52, t);
 
           // logo V
           const lx = (fx - padding) / inner;
@@ -152,7 +152,7 @@ for (const [name, size, opts] of targets) {
 // wersja wektorowa (favicon.svg)
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#8B5CFF"/><stop offset="1" stop-color="#4C37E0"/>
+    <stop offset="0" stop-color="#3A57D6"/><stop offset="1" stop-color="#101C52"/>
   </linearGradient></defs>
   <rect width="100" height="100" rx="22" fill="url(#g)"/>
   <path d="M28.5 27.5 L50 71 L71.5 27.5" fill="none" stroke="#fff" stroke-width="13.3"

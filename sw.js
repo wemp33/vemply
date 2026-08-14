@@ -1,5 +1,5 @@
 /* Vemply – service worker: aplikacja działa w 100% offline. */
-const CACHE = 'vemply-v2';
+const CACHE = 'vemply-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -12,9 +12,15 @@ const ASSETS = [
   './icons/icon-maskable-512.png'
 ];
 
+// `cache: 'reload'` omija cache HTTP przeglądarki (GitHub Pages serwuje
+// index.html z max-age=600, przez co bez tego po wdrożeniu wpadały stare pliki).
+const fresh = url => new Request(url, { cache: 'reload' });
+
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(fresh)))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -30,10 +36,10 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // nawigacja: najpierw sieć (świeża wersja), offline → cache
+  // nawigacja: najpierw sieć (świeża wersja, z pominięciem cache HTTP), offline → cache
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req)
+      fetch(fresh(req.url))
         .then(res => {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put('./index.html', copy));

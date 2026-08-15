@@ -248,14 +248,32 @@
 
   /* ---------- arkusz „martwy dzień roku” ---------- */
   .yr{
-    display:flex;align-items:center;gap:10px;
+    display:flex;align-items:center;gap:7px;
     background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
-    padding:8px 8px 8px 14px;margin-bottom:2px;
+    padding:7px 7px 7px 11px;margin-bottom:2px;
   }
-  .yr>span{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#7A7A8C}
-  .yr>b{flex:1;font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .yr>span:first-child{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#7A7A8C;flex:0 0 auto}
+  /* 21 px to zarazem czytelna cyfra i próg, poniżej którego iOS przybliża stronę przy fokusie */
+  .yr-in{
+    flex:0 0 clamp(66px,19vw,78px);width:clamp(66px,19vw,78px);
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:6px 4px;color:var(--text);text-align:center;
+    font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+    -webkit-user-select:text;user-select:text;
+    transition:border-color .18s ease,background .18s ease;
+  }
+  .yr-in:focus{outline:none;border-color:var(--accent);background:#1A1A28}
+  .yr-in::placeholder{color:#45455A;font-size:15px;font-weight:500;letter-spacing:.02em}
+  .yr-day{
+    flex:1;min-width:0;text-align:center;
+    font-size:clamp(12px,3.5vw,14px);font-weight:600;color:#B9C6FF;
+    background:rgba(76,111,255,.12);border:1px solid rgba(76,111,255,.32);
+    border-radius:10px;padding:8px 4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
   .yr>button{
-    padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);
+    flex:0 0 auto;padding:8px 10px;border-radius:10px;
+    background:var(--surface);border:1px solid var(--line);
     color:var(--text);font-size:13px;font-weight:560;
     transition:background var(--tap) ease,transform var(--tap) ease;
   }
@@ -375,8 +393,11 @@
     </p>
     <div class="yr">
       <span>rok</span>
-      <b id="eYear">—</b>
-      <button id="eRoll" type="button">Inny rok</button>
+      <input id="eYear" class="yr-in" type="text" inputmode="numeric" pattern="[0-9]*"
+             maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false"
+             enterkeyhint="gotowe" aria-label="Wpisz rok" placeholder="rrrr">
+      <span class="yr-day" id="eDayQuick">—</span>
+      <button id="eRoll" type="button" aria-label="Wylosuj inny rok">Losuj</button>
     </div>
   </div>
 
@@ -392,8 +413,9 @@
   <div class="res" id="eRes"><b id="eNum">—</b><i></i><span id="eDay">—</span></div>
 
   <p class="note" style="margin-top:12px">
-    Numery dni: 0 = niedziela, 1 = poniedziałek … 6 = sobota.
-    Dla lat spoza 1700–2099 kotwicę bierzesz z cyklu 400-letniego (2100 jak 1700, 2200 jak 1800).
+    Wpisz dowolny rok (1–9999) albo naciśnij <b>Losuj</b>. Numery dni:
+    0 = niedziela, 1 = poniedziałek … 6 = sobota. Kotwicę stulecia aplikacja bierze
+    z cyklu 400-letniego, więc działa też poza latami 1700–2099 (2100 jak 1700, 2200 jak 1800).
   </p>
 </div>
 
@@ -655,8 +677,9 @@
     else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight'){ nextQuestion(); e.preventDefault(); }
   });
 
-  // zapobiega przypadkowemu zaznaczaniu / menu kontekstowemu przy szybkim stukaniu
-  document.addEventListener('contextmenu', e => e.preventDefault());
+  // zapobiega przypadkowemu zaznaczaniu / menu kontekstowemu przy szybkim stukaniu,
+  // ale pole roku musi zachować systemowe menu (zaznacz, wklej)
+  document.addEventListener('contextmenu', e => { if (!e.target.closest('input')) e.preventDefault(); });
   document.addEventListener('gesturestart', e => e.preventDefault());
 
   /* ============ arkusze: ustawienia i QR ============
@@ -693,6 +716,7 @@
 
   function hideSheet(el, { velocity = 0, from = 0, instant = false } = {}){
     if (!el) return;
+    if (el.contains(document.activeElement)) document.activeElement.blur();   // zamyka klawiaturę
     let dur = 0;
     if (!instant){
       const left = Math.max(1, (el.offsetHeight || 1) - from);
@@ -739,6 +763,8 @@
       drag.el.style.transition = 'none';
       scrim.style.transition = 'none';
       drag.el.classList.add('dragging');
+      // ciągnięcie arkusza chowa klawiaturę, żeby nie walczyła z gestem
+      if (drag.el.contains(document.activeElement)) document.activeElement.blur();
     }
     drag.samples.push([performance.now(), e.clientY]);
     if (drag.samples.length > 10) drag.samples.shift();
@@ -894,12 +920,18 @@
 
   /* ---- martwy dzień roku: wzór krok po kroku ---- */
 
-  const shYear = $('sheetYear');
+  const shYear = $('sheetYear'), inpYear = $('eYear');
   // kotwica stulecia; powtarza się co 400 lat: 1700→0, 1800→5, 1900→3, 2000→2
   const kotwicaStulecia = y => (5 * (Math.floor(y / 100) % 4) + 2) % 7;
   let pokazanyRok = 0;
 
-  function renderYear(y, animate){
+  const POLA = ['eCentLbl','eC','eYY','eQ','eRLbl','eR','eR4','eSumLbl','eSum','eMod','eNum','eDay','eDayQuick'];
+  function pustyWynik(){                       // puste pole roku → same kreski zamiast liczb
+    for (const id of POLA) $(id).textContent = '—';
+  }
+
+  function renderYear(y, animate, updateInput = true){
+    if (updateInput) inpYear.value = y;
     const stulecie = Math.floor(y / 100) * 100;
     const yy = y % 100;
     const C = kotwicaStulecia(y);
@@ -910,7 +942,6 @@
     const dzien = suma % 7;                    // 0 = niedziela … 6 = sobota
 
     pokazanyRok = y;
-    $('eYear').textContent = y;
     $('eCentLbl').textContent = stulecie + '–' + (stulecie + 99);
     $('eC').textContent = C;
     $('eYY').textContent = String(yy).padStart(2, '0');
@@ -923,6 +954,8 @@
     $('eMod').textContent = dzien;
     $('eNum').textContent = dzien;
     $('eDay').textContent = DAYS[dzien];
+    $('eDayQuick').textContent = DAYS[dzien];    // wynik widoczny też przy polu roku,
+                                                 // bo klawiatura zasłania dół arkusza
 
     if (animate){                              // przeliczenie „spływa” wierszami z góry
       for (const el of [$('eCalc'), $('eRes')]){
@@ -941,6 +974,23 @@
 
   $('openYear').addEventListener('click', () => { renderYear(losujRok(), true); showSheet(shYear); });
   $('eRoll').addEventListener('click', () => renderYear(losujRok(), true));
+
+  // wpisywanie roku z klawiatury numerycznej — przelicza się na bieżąco
+  inpYear.addEventListener('input', () => {
+    const cyfry = inpYear.value.replace(/\D/g, '').slice(0, 4);
+    if (cyfry !== inpYear.value) inpYear.value = cyfry;
+    const y = parseInt(cyfry, 10);
+    if (!y) { pustyWynik(); return; }           // puste pole albo samo zero
+    renderYear(y, false, false);                // nie nadpisujemy tego, co user pisze
+  });
+  inpYear.addEventListener('blur', () => {
+    const y = parseInt(inpYear.value, 10);
+    if (y) renderYear(y, false);                // porządkuje np. „0044" → „44"
+    else renderYear(pokazanyRok || losujRok(), true);
+  });
+  inpYear.addEventListener('keydown', e => { if (e.key === 'Enter') inpYear.blur(); });
+  inpYear.addEventListener('focus', () => inpYear.select());
+
   renderYear(losujRok(), false);
 
   /* ---- udostępnianie ---- */

@@ -13,8 +13,10 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 
 ## Ściągi (ikony **E**, **D** i **C** w nagłówku)
 
-**E — martwy dzień roku.** Wyliczenie krok po kroku, na losowanym przykładzie
-(przycisk *Inny rok* losuje kolejny z zakresu 1700–2099):
+**E — martwy dzień roku.** Wyliczenie krok po kroku dla roku wpisanego z klawiatury
+numerycznej (pole `inputmode="numeric"`, 1–9999, przelicza się przy każdej cyfrze)
+albo wylosowanego przyciskiem *Losuj*. Nazwa dnia pokazuje się także przy samym polu,
+bo na telefonie klawiatura zasłania dolną część arkusza. Kroki:
 
 1. kotwica stulecia **C** (z ekranu C),
 2. dwie ostatnie cyfry roku ÷ 12 — ile całych,

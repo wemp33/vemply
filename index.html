@@ -65,10 +65,12 @@
   header{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:2px 2px 0}
   .logo{width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:block}
   .brand{font-size:19px;font-weight:650;letter-spacing:-.015em}
+  /* pięć ikon + nazwa nie zmieszczą się na najwęższych ekranach – zostaje samo logo */
+  @media (max-width:359px){.brand{display:none}}
   .spacer{flex:1}
-  .actions{display:flex;gap:clamp(5px,1.9vw,8px);flex:0 0 auto}
+  .actions{display:flex;gap:clamp(5px,1.8vw,7px);flex:0 0 auto}
   .icon-btn{
-    width:clamp(34px,10vw,38px);height:clamp(34px,10vw,38px);
+    width:clamp(32px,9.2vw,36px);height:clamp(32px,9.2vw,36px);
     border-radius:11px;display:grid;place-items:center;
     background:var(--surface);border:1px solid var(--line);color:var(--muted);
     transition:background var(--tap) ease,color var(--tap) ease,transform var(--tap) ease;
@@ -244,6 +246,49 @@
   @keyframes ddSwap{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   .dd.swapping b{animation:ddSwap .24s cubic-bezier(.32,.72,0,1)}
 
+  /* ---------- arkusz „martwy dzień roku” ---------- */
+  .yr{
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:13px;
+    padding:8px 8px 8px 14px;margin-bottom:2px;
+  }
+  .yr>span{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#7A7A8C}
+  .yr>b{flex:1;font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .yr>button{
+    padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);
+    color:var(--text);font-size:13px;font-weight:560;
+    transition:background var(--tap) ease,transform var(--tap) ease;
+  }
+  .yr>button:active{background:#272736;transform:scale(.96)}
+
+  .calc{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .crow{
+    display:flex;align-items:center;gap:10px;padding:9px 13px;
+    border-top:1px solid var(--line);font-size:13.5px;
+  }
+  .crow:first-child{border-top:0}
+  .crow>span{flex:1;color:var(--muted);line-height:1.3}
+  .crow>span em{font-style:normal;color:var(--text);font-weight:650;font-variant-numeric:tabular-nums}
+  .crow>b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;min-width:24px;text-align:right}
+  .crow.tot{background:rgba(76,111,255,.10)}
+  .crow.tot>b{color:#B9C6FF}
+  .res{
+    margin-top:10px;display:flex;align-items:center;justify-content:center;gap:12px;
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
+    border-radius:14px;padding:12px;color:#fff;
+  }
+  .res b{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  .res i{width:1px;height:22px;background:rgba(255,255,255,.35)}
+  .res span{font-size:18px;font-weight:600;letter-spacing:-.015em}
+  @keyframes calcIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  .calc.anim .crow{animation:calcIn .26s cubic-bezier(.32,.72,0,1) backwards}
+  .calc.anim .crow:nth-child(2){animation-delay:.05s}
+  .calc.anim .crow:nth-child(3){animation-delay:.1s}
+  .calc.anim .crow:nth-child(4){animation-delay:.15s}
+  .calc.anim .crow:nth-child(5){animation-delay:.2s}
+  .calc.anim .crow:nth-child(6){animation-delay:.25s}
+  .res.anim{animation:calcIn .26s cubic-bezier(.32,.72,0,1) .3s backwards}
+
   /* ---------- arkusz „kotwice stuleci” ---------- */
   .cent-row{
     display:flex;align-items:center;gap:12px;
@@ -278,6 +323,7 @@
     <div class="brand">Vemply</div>
     <div class="spacer"></div>
     <div class="actions">
+    <button class="icon-btn" id="openYear" aria-label="Martwy dzień roku"><span class="glyph">E</span></button>
     <button class="icon-btn" id="openDoom" aria-label="Dni doomsday"><span class="glyph">D</span></button>
     <button class="icon-btn" id="openCentury" aria-label="Kotwice stuleci"><span class="glyph">C</span></button>
     <button class="icon-btn" id="openQr" aria-label="Kod QR — udostępnij aplikację">
@@ -318,6 +364,38 @@
 </div>
 
 <div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="sheetYear" role="dialog" aria-modal="true" aria-label="Martwy dzień roku" aria-hidden="true">
+  <div class="grab">
+    <div class="handle"></div>
+    <h2>Martwy dzień roku</h2>
+    <p class="note">
+      Dzień tygodnia, w którym w danym roku wypadają <b>wszystkie</b> daty z ekranu D.
+      Liczysz go raz i masz cały rok.
+    </p>
+    <div class="yr">
+      <span>rok</span>
+      <b id="eYear">—</b>
+      <button id="eRoll" type="button">Inny rok</button>
+    </div>
+  </div>
+
+  <div class="calc" id="eCalc">
+    <div class="crow"><span>Kotwica stulecia <em id="eCentLbl">—</em> — z ekranu C</span><b id="eC">—</b></div>
+    <div class="crow"><span>Dwie ostatnie cyfry roku: <em id="eYY">—</em>. Ile razy mieści się w nich 12?</span><b id="eQ">—</b></div>
+    <div class="crow"><span>Ile zostaje reszty? <em id="eRLbl">—</em></span><b id="eR">—</b></div>
+    <div class="crow"><span>Ile razy mieści się 4 w tej reszcie?</span><b id="eR4">—</b></div>
+    <div class="crow tot"><span>Dodaj te cztery liczby: <em id="eSumLbl">—</em></span><b id="eSum">—</b></div>
+    <div class="crow"><span>Odejmuj po 7, aż zostanie liczba od 0 do 6</span><b id="eMod">—</b></div>
+  </div>
+
+  <div class="res" id="eRes"><b id="eNum">—</b><i></i><span id="eDay">—</span></div>
+
+  <p class="note" style="margin-top:12px">
+    Numery dni: 0 = niedziela, 1 = poniedziałek … 6 = sobota.
+    Dla lat spoza 1700–2099 kotwicę bierzesz z cyklu 400-letniego (2100 jak 1700, 2200 jak 1800).
+  </p>
+</div>
 
 <div class="sheet" id="sheetDoom" role="dialog" aria-modal="true" aria-label="Dni doomsday" aria-hidden="true">
   <!-- cała góra arkusza (uchwyt, tytuł, przełącznik, notka) ciągnie arkusz w dół,
@@ -813,6 +891,57 @@
 
   $('openDoom').addEventListener('click', () => showSheet(shDoom));
   $('openCentury').addEventListener('click', () => showSheet(shCent));
+
+  /* ---- martwy dzień roku: wzór krok po kroku ---- */
+
+  const shYear = $('sheetYear');
+  // kotwica stulecia; powtarza się co 400 lat: 1700→0, 1800→5, 1900→3, 2000→2
+  const kotwicaStulecia = y => (5 * (Math.floor(y / 100) % 4) + 2) % 7;
+  let pokazanyRok = 0;
+
+  function renderYear(y, animate){
+    const stulecie = Math.floor(y / 100) * 100;
+    const yy = y % 100;
+    const C = kotwicaStulecia(y);
+    const ile12 = Math.floor(yy / 12);         // ile razy 12 mieści się w dwóch ostatnich cyfrach
+    const reszta = yy % 12;                    // reszta z tego dzielenia
+    const ile4 = Math.floor(reszta / 4);       // ile razy 4 mieści się w tej reszcie
+    const suma = C + ile12 + reszta + ile4;
+    const dzien = suma % 7;                    // 0 = niedziela … 6 = sobota
+
+    pokazanyRok = y;
+    $('eYear').textContent = y;
+    $('eCentLbl').textContent = stulecie + '–' + (stulecie + 99);
+    $('eC').textContent = C;
+    $('eYY').textContent = String(yy).padStart(2, '0');
+    $('eQ').textContent = ile12;
+    $('eRLbl').textContent = yy + ' − ' + ile12 + '×12';
+    $('eR').textContent = reszta;
+    $('eR4').textContent = ile4;
+    $('eSumLbl').textContent = `${C} + ${ile12} + ${reszta} + ${ile4}`;
+    $('eSum').textContent = suma;
+    $('eMod').textContent = dzien;
+    $('eNum').textContent = dzien;
+    $('eDay').textContent = DAYS[dzien];
+
+    if (animate){                              // przeliczenie „spływa” wierszami z góry
+      for (const el of [$('eCalc'), $('eRes')]){
+        el.classList.remove('anim');
+        void el.offsetWidth;
+        el.classList.add('anim');
+      }
+    }
+  }
+
+  function losujRok(){
+    let y;
+    do { y = 1700 + Math.floor(Math.random() * 400); } while (y === pokazanyRok);
+    return y;
+  }
+
+  $('openYear').addEventListener('click', () => { renderYear(losujRok(), true); showSheet(shYear); });
+  $('eRoll').addEventListener('click', () => renderYear(losujRok(), true));
+  renderYear(losujRok(), false);
 
   /* ---- udostępnianie ---- */
 

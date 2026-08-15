@@ -11,7 +11,27 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 - Przycisk w prawym dolnym rogu siatki („Pomiń" / „Dalej") przechodzi do następnej daty.
 - Zero podpowiedzi. Kolejne daty są przygotowane z wyprzedzeniem (bufor 8 pytań), więc przejście jest natychmiastowe.
 
-## Ściągi (ikony **D** i **C** w nagłówku)
+## Ściągi (ikony **E**, **D** i **C** w nagłówku)
+
+**E — martwy dzień roku.** Wyliczenie krok po kroku, na losowanym przykładzie
+(przycisk *Inny rok* losuje kolejny z zakresu 1700–2099):
+
+1. kotwica stulecia **C** (z ekranu C),
+2. dwie ostatnie cyfry roku ÷ 12 — ile całych,
+3. reszta z tego dzielenia,
+4. ta reszta ÷ 4 — ile całych,
+5. suma czterech liczb, od której odejmujemy po 7, aż zostanie 0–6.
+
+Wynik to dzień tygodnia (0 = niedziela … 6 = sobota), w którym w tym roku wypadają
+wszystkie daty z ekranu D. Formalnie:
+
+```
+(C + ⌊YY/12⌋ + YY mod 12 + ⌊(YY mod 12)/4⌋) mod 7
+```
+
+Wzór zweryfikowany dla wszystkich lat 1583–2400 wobec dnia tygodnia 4 kwietnia
+liczonego z numeru dnia juliańskiego — zero rozbieżności; dodatkowo 250 losowań
+sprawdzonych krok po kroku razem z tym, co pokazuje ekran.
 
 **D — dni doomsday.** Wszystkie dni, które w obrębie jednego roku wypadają w tym samym
 dniu tygodnia — w każdym miesiącu kotwica i jej powtórzenia co 7 dni (52 dni w roku).

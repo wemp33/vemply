@@ -152,7 +152,7 @@
     padding:0 18px calc(18px + env(safe-area-inset-bottom));
     transform:translateY(102%);
     transition:transform .34s cubic-bezier(.32,.72,0,1);
-    max-height:88dvh;overflow-y:auto;
+    max-height:88dvh;overflow-y:auto;overscroll-behavior:none;
     will-change:transform;
     /* domyślnie przechwytujemy gest w pionie — arkusz ma podążać za palcem,
        a nie przewijać treść; pan-y wraca dopiero, gdy treść się nie mieści */
@@ -160,7 +160,7 @@
   }
   .sheet.open{transform:translateY(0)}
   .sheet.scrollable{touch-action:pan-y}
-  .grab{padding:10px 0 2px;touch-action:none}
+  .grab{padding:12px 0 4px;touch-action:none}
   .handle{
     width:38px;height:4.5px;border-radius:999px;background:var(--line);margin:0 auto 12px;
     transition:background .16s ease,width .16s ease;
@@ -320,29 +320,28 @@
 <div class="scrim" id="scrim"></div>
 
 <div class="sheet" id="sheetDoom" role="dialog" aria-modal="true" aria-label="Dni doomsday" aria-hidden="true">
-  <div class="grab"><div class="handle"></div><h2>Dni doomsday</h2></div>
-
-  <div class="seg" role="tablist" aria-label="Rodzaj roku">
-    <div class="seg-ind" id="segInd" aria-hidden="true"></div>
-    <button class="seg-btn" role="tab" data-leap="0" aria-selected="true">Rok zwykły</button>
-    <button class="seg-btn" role="tab" data-leap="1" aria-selected="false">Rok przestępny</button>
+  <!-- cała góra arkusza (uchwyt, tytuł, przełącznik, notka) ciągnie arkusz w dół,
+       dzięki czemu strefa zamykania jest znacznie większa niż sam uchwyt -->
+  <div class="grab">
+    <div class="handle"></div>
+    <h2>Dni doomsday</h2>
+    <div class="seg" role="tablist" aria-label="Rodzaj roku">
+      <div class="seg-ind" id="segInd" aria-hidden="true"></div>
+      <button class="seg-btn" role="tab" data-leap="0" aria-selected="true">Rok zwykły</button>
+      <button class="seg-btn" role="tab" data-leap="1" aria-selected="false">Rok przestępny</button>
+    </div>
+    <p class="note">
+      W danym roku wszystkie wypadają w <b>tym samym dniu tygodnia</b>.
+      Wyróżniona jest kotwica miesiąca, reszta to ona co 7 dni.
+    </p>
   </div>
-  <p class="note">
-    W danym roku wszystkie wypadają w <b>tym samym dniu tygodnia</b>.
-    Wyróżniona jest kotwica miesiąca, reszta to ona co 7 dni.
-  </p>
 
-  <h3>Miesiące parzyste — kotwica = numer miesiąca</h3>
-  <div class="dd-row" id="ddEven"></div>
+  <div class="dd-row" id="ddAll"></div>
 
-  <h3>Miesiące nieparzyste — 9–5, 7–11</h3>
-  <div class="dd-row" id="ddOdd"></div>
-
-  <h3>Początek roku</h3>
-  <div class="dd-row" id="ddStart"></div>
-  <p class="note" style="margin-top:10px">
-    Styczeń i luty przesuwają się w roku przestępnym — pozostałe dziesięć miesięcy nigdy.
-    14.03 to zawsze ten sam dzień tygodnia co ostatni dzień lutego.
+  <p class="note" style="margin-top:11px">
+    Kotwice: w miesiącach parzystych dzień = numer miesiąca (4.04, 6.06, 8.08, 10.10, 12.12),
+    w nieparzystych działa „9–5, 7–11" (9.05, 5.09, 11.07, 7.11).
+    Styczeń i luty przesuwają się w roku przestępnym — pozostałe nigdy.
   </p>
 </div>
 
@@ -593,6 +592,7 @@
   const EASE = 'cubic-bezier(.32,.72,0,1)';          // wyhamowanie w stylu iOS
   const SNAP = 'cubic-bezier(.22,.92,.3,1.04)';      // powrót z lekkim „dociągnięciem”
   const CLOSE_PART = 0.28;                           // ile wysokości wystarczy przeciągnąć
+  const CLOSE_MAX  = 140;                            // …ale nigdy więcej niż tyle pikseli
   const CLOSE_VEL  = 0.5;                            // px/ms – próg strzepnięcia
   let openSheetEl = null, justDragged = false, dragClickTimer = 0;
 
@@ -640,9 +640,14 @@
   document.addEventListener('pointerdown', e => {
     const el = openSheetEl;
     if (!el || drag || e.button > 0 || !el.contains(e.target)) return;
-    // przy przewijalnej treści ciągniemy wyłącznie za uchwyt, żeby nie blokować scrolla
-    if (el.classList.contains('scrollable') && !e.target.closest('.grab')) return;
+    const naUchwycie = !!e.target.closest('.grab');
+    const przewijalny = el.classList.contains('scrollable');
+    // Górna strefa ciągnie zawsze. Poza nią przy przewijalnej treści łapiemy gest
+    // tylko wtedy, gdy treść jest na samej górze — nie ma czego przewijać w górę,
+    // więc ruch w dół może zamykać arkusz (ruch w górę oddajemy przewijaniu).
+    if (przewijalny && !naUchwycie && el.scrollTop > 0) return;
     drag = { el, id: e.pointerId, y0: e.clientY, dy: 0, moved: false,
+             tylkoWDol: przewijalny && !naUchwycie,
              samples: [[performance.now(), e.clientY]] };
   }, { passive: true });
 
@@ -651,6 +656,7 @@
     const raw = e.clientY - drag.y0;
     if (!drag.moved){
       if (Math.abs(raw) < 4) return;                   // próg, żeby nie psuć stuknięć
+      if (drag.tylkoWDol && raw < 0){ drag = null; return; }   // to przewijanie, nie zamykanie
       drag.moved = true;
       drag.el.style.transition = 'none';
       scrim.style.transition = 'none';
@@ -690,7 +696,8 @@
     const dt = last[0] - ref[0];
     const v = (dt >= 12 && now - last[0] < 120) ? (last[1] - ref[1]) / dt : 0;   // px/ms, w dół dodatnie
 
-    if (dy > el.offsetHeight * CLOSE_PART || v > CLOSE_VEL){
+    // wysoki arkusz nie może wymagać ciągnięcia przez pół ekranu
+    if (dy > Math.min(el.offsetHeight * CLOSE_PART, CLOSE_MAX) || v > CLOSE_VEL){
       hideSheet(el, { velocity: Math.max(v, 0), from: dy });
     } else {
       void el.offsetHeight;
@@ -756,8 +763,8 @@
                 'lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
   // kotwice miesięcy w roku zwykłym (styczeń i luty mają w przestępnym o 1 więcej)
   const KOTWICE = [3, 28, 14, 4, 9, 6, 11, 8, 5, 10, 7, 12];
-  // grupy zachowują podział z ekranu: parzyste / nieparzyste / początek roku
-  const GRUPY = [['ddEven', [4,6,8,10,12]], ['ddOdd', [5,9,7,11]], ['ddStart', [1,2,3]]];
+  // miesiące w kolejności kalendarzowej: styczeń → grudzień
+  const KOLEJNOSC = [1,2,3,4,5,6,7,8,9,10,11,12];
 
   // wszystkie dni doomsday w miesiącu = kotwica ± wielokrotność 7
   function doomsdays(m, leap){
@@ -772,27 +779,25 @@
     for (const b of segBtns) b.setAttribute('aria-selected', String((b.dataset.leap === '1') === leapView));
     segInd.style.transform = leapView ? 'translateX(calc(100% + 4px))' : 'translateX(0)';
 
-    for (const [id, months] of GRUPY){
-      const box = $(id);
-      box.textContent = '';
-      for (const m of months){
-        const { days, anchor } = doomsdays(m, leapView);
-        const zmienny = (m === 1 || m === 2);          // tylko te dwa zależą od przestępności
-        const tile = document.createElement('div');
-        tile.className = 'dd' + (leapView && zmienny ? ' changed' : '') +
-                         (animate && zmienny ? ' swapping' : '');
-        const name = document.createElement('span');
-        name.textContent = MIES[m - 1];
-        const list = document.createElement('b');
-        for (const d of days){
-          const it = document.createElement('i');
-          if (d === anchor) it.className = 'a';
-          it.textContent = d;
-          list.appendChild(it);
-        }
-        tile.append(name, list);
-        box.appendChild(tile);
+    const box = $('ddAll');
+    box.textContent = '';
+    for (const m of KOLEJNOSC){
+      const { days, anchor } = doomsdays(m, leapView);
+      const zmienny = (m === 1 || m === 2);            // tylko te dwa zależą od przestępności
+      const tile = document.createElement('div');
+      tile.className = 'dd' + (leapView && zmienny ? ' changed' : '') +
+                       (animate && zmienny ? ' swapping' : '');
+      const name = document.createElement('span');
+      name.textContent = MIES[m - 1];
+      const list = document.createElement('b');
+      for (const d of days){
+        const it = document.createElement('i');
+        if (d === anchor) it.className = 'a';
+        it.textContent = d;
+        list.appendChild(it);
       }
+      tile.append(name, list);
+      box.appendChild(tile);
     }
   }
 

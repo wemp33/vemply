@@ -15,22 +15,25 @@ Bez App Store, bez instalacji, bez kont — otwierasz link i dodajesz do ekranu 
 
 **D — dni doomsday.** Wszystkie dni, które w obrębie jednego roku wypadają w tym samym
 dniu tygodnia — w każdym miesiącu kotwica i jej powtórzenia co 7 dni (52 dni w roku).
-Ekran zachowuje podział na miesiące, pogrupowane regułą kotwic:
+Miesiące w kolejności kalendarzowej, po dwa w rzędzie:
 
-| Grupa | Miesiąc | Dni (kotwica **pogrubiona**) |
-|---|---|---|
-| Parzyste — kotwica = numer miesiąca | kwiecień | **4** · 11 · 18 · 25 |
-| | czerwiec | **6** · 13 · 20 · 27 |
-| | sierpień | 1 · **8** · 15 · 22 · 29 |
-| | październik | 3 · **10** · 17 · 24 · 31 |
-| | grudzień | 5 · **12** · 19 · 26 |
-| Nieparzyste — „9–5, 7–11" | maj | 2 · **9** · 16 · 23 · 30 |
-| | wrzesień | **5** · 12 · 19 · 26 |
-| | lipiec | 4 · **11** · 18 · 25 |
-| | listopad | **7** · 14 · 21 · 28 |
-| Początek roku | styczeń | **3** · 10 · 17 · 24 · 31 · *(przestępny:* **4** · 11 · 18 · 25*)* |
-| | luty | 7 · 14 · 21 · **28** · *(przestępny:* 1 · 8 · 15 · 22 · **29***)* |
-| | marzec | 7 · **14** · 21 · 28 |
+| Miesiąc | Dni (kotwica **pogrubiona**) |
+|---|---|
+| styczeń | **3** · 10 · 17 · 24 · 31 — *przestępny:* **4** · 11 · 18 · 25 |
+| luty | 7 · 14 · 21 · **28** — *przestępny:* 1 · 8 · 15 · 22 · **29** |
+| marzec | 7 · **14** · 21 · 28 |
+| kwiecień | **4** · 11 · 18 · 25 |
+| maj | 2 · **9** · 16 · 23 · 30 |
+| czerwiec | **6** · 13 · 20 · 27 |
+| lipiec | 4 · **11** · 18 · 25 |
+| sierpień | 1 · **8** · 15 · 22 · 29 |
+| wrzesień | **5** · 12 · 19 · 26 |
+| październik | 3 · **10** · 17 · 24 · 31 |
+| listopad | **7** · 14 · 21 · 28 |
+| grudzień | 5 · **12** · 19 · 26 |
+
+Reguła kotwic (na ekranie jako notka pod tabelą): w miesiącach parzystych dzień = numer
+miesiąca, w nieparzystych działa „9–5, 7–11".
 
 Przełącznik *rok zwykły / rok przestępny* podmienia listy stycznia i lutego
 (pozostałe dziesięć miesięcy nie zmienia się nigdy). Żaden konkretny rok nie jest pokazywany.
@@ -68,12 +71,20 @@ npx qrcode -t svg -e M -o qr.svg "https://wemp33.github.io/vemply/"
 
 ## Arkusze (ustawienia, QR)
 
-Oba arkusze zamyka się gestem — w trakcie przeciągania podążają za palcem 1:1
+Arkusze zamyka się gestem — w trakcie przeciągania podążają za palcem 1:1
 (w górę z oporem), a przyciemnienie tła gaśnie proporcjonalnie do przesunięcia.
-Po puszczeniu decyduje dystans (28 % wysokości) **albo** prędkość (0,5 px/ms),
-więc krótkie strzepnięcie też zamyka; czas animacji dobiera się do prędkości gestu.
-Gdy treść nie mieści się na ekranie, arkusz przewija się normalnie, a przeciąganie
-zostaje na uchwycie.
+Po puszczeniu decyduje dystans (28 % wysokości, ale nie więcej niż 140 px)
+**albo** prędkość (0,5 px/ms), więc krótkie strzepnięcie też zamyka; czas animacji
+dobiera się do prędkości gestu.
+
+Strefa zamykania jest celowo większa niż sam uchwyt:
+
+- cała góra arkusza (uchwyt, tytuł, a w sekcji D także przełącznik roku i notka)
+  ciągnie arkusz zawsze — w sekcji D to ok. 28 % jego wysokości;
+- poza tą strefą gest łapie się, gdy treść jest przewinięta na samą górę: ruch w dół
+  zamyka, ruch w górę oddaje sterowanie przewijaniu;
+- po przewinięciu treści w dół gest z jej obszaru nie zamyka arkusza, żeby dało się
+  wrócić do góry — wtedy zostaje górna strefa albo stuknięcie w tło.
 
 ## Zakres dat (Ustawienia)
 
